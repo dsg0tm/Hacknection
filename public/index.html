@@ -1,9 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+  <title>Swarthmore Connection</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/custom.css" rel="stylesheet">
+  <link type="text/css" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500">
+  <link href="css/datepicker.css" rel="stylesheet">
 
-<html>
-  <head>
-    <title>My ParseApp site</title>
-  </head>
-  <body>
-    Hello World!
-  </body>
+  <!-- JS Libraries -->
+  <script src="js/lib/respond.js"></script>
+  <script src="js/lib/jquery-1.11.0.min.js"></script>
+  <script src="js/lib/bootstrap.min.js"></script>
+  <script src="js/lib/underscore-min.js"></script>
+  <script src="js/lib/parse-1.2.18.min.js"></script>
+  <script src="js/lib/bootstrap-datepicker.js"></script>
+  <script src="js/lib/markerclusterer.js" type="text/javascript"></script>
+
+</head>
+<body>
+  <div id="fb-root"></div>
+  <script>
+    //Initialize Parse
+    //Parse.initialize("EKsq0ZyvohYoGkzNpxSrMEuIlsSoyeNuLL2R4y2d", "HkqRXop5n3uVLviusgM1lkRETbBxfcGowyiCTp4G"); // Hacknection
+
+    Parse.initialize("Z8MDn4SGuskCvuYj7JEdDYGHC9gaKGwtQXFH6tBo", "ZBmGcnOqKXQ23hzXh8fkva7BNf1NKOdDE6IQfBje"); // Hacknection_Dev
+
+    //Initialize Facebook
+    window.fbAsyncInit = function() {
+      // init the FB JS SDK
+      Parse.FacebookUtils.init({
+      	//appId: '1420209544907372', // Hacknection
+        appId: '754025097970898', // Hacknection_Dev
+        channelUrl: '//swatnet.parseapp.com/channel.html', // Channel File
+        //status     : true, // check login status
+        cookie: true, // enable cookies to allow Parse to access the session
+        xfbml: true // parse XFBML
+      });
+    };
+    //Async load FB JS SDK
+    (function(d, debug) {
+      var js, id = 'facebook-jssdk', ref = d.getElementsByTagName('script')[0];
+      if (d.getElementById(id)) {return;}
+      js = d.createElement('script');
+      js.id = id;
+      js.async = true;
+      js.src = "http://connect.facebook.net/en_US/all" + (debug ? "/debug" : "") + ".js";
+      ref.parentNode.insertBefore(js, ref);
+    }(document, /*debug*/ false));
+  </script>
+
+  <div id="app">
+  	<!-- Nav_bar -->
+  	<header class="navbar navbar-default" id="top" role="navigation">
+			<div class="container-fluid">
+		    <!-- Brand and toggle get grouped for better mobile display -->
+		    <div class="navbar-header">
+		    	<button type="button" id="share-plan-toggle" class="navbar-toggle" onclick="router.navigate('plan/new',{trigger:true})">
+		        <span class="glyphicon glyphicon-plus" id="share-plan-glyphicon"></span>
+		      </button>
+		      <a class="navbar-brand" id="logo" href="#">Swarthmore Connection</a>
+		    </div>
+		    <!-- Collect the nav links, forms, and other content for toggling -->
+		    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		    	<ul class="nav navbar-nav">
+		    		<li class="nav-list-item"><a href="#" data-toggle="modal" data-target="#about-sc">ABOUT</a></li>
+		    		<li class="nav-list-item"><a href="#other">OTHER</a></li>
+		    		<!--
+		    		<li class="nav-list-item"><a href="/#group">GROUPS</a></li>
+		    	-->
+		    		<li class="nav-list-item">
+		    			<button type="button" id="find-fb-friends-btn" class="btn btn-primary" onclick="router.navigate('findFriends',{trigger:true})" data-loading-text="Loading their plans..."><span class="glyphicon glyphicon-user" style="color: white;"></span><span id="find-fb-friends-btn-content">&nbsp;Find my Facebook friends</span></button>
+		    		</li>
+		    		<li class="nav-list-item">
+		    			<button type="button" id="find-nearby-btn" class="btn btn-primary" onclick="router.navigate('chooseLocation',{trigger:true})" data-loading-text="Loading who's nearby"><span class="glyphicon glyphicon-zoom-in" style="color: white;"></span><span id="find-nearby-btn-content">&nbsp;Find who will be nearby</span></button>
+		    			<!--Find who will be nearby-->
+		    		</li>
+		    	</ul>
+		        <ul class="nav navbar-nav navbar-right">
+			      	<li>
+			      		<button type="button" id="share-plan-btn" class="btn btn-primary" onclick="router.navigate('plan/new',{trigger:true})"><span class="glyphicon glyphicon-plus" style="color: white;"></span><span id="share-plan-btn-content">&nbsp;Share your summer plans!</span></button>
+			      		<!--Share your summer plans!-->
+			      	</li>
+			      	<li>
+			      		<div id="my-account-btn-div">
+			      		</div>
+			      	</li>
+		        </ul>
+		    </div><!-- /.navbar-collapse1 -->
+		</div><!-- /.container-fluid -->
+  </header>
+
+	<!-- main canvas of the app -->
+	<div class="fill" id="mapView">
+		<div id="map-canvas"></div>
+	</div>
+	<div class="fill" id="otherView">
+		Hello world
+		<div style="width:200px;height:200px;background-color:red;"></div>
+	</div>
+
+  <!-- About Swarthmore Connection Modal -->
+ 	<div class="modal fade" id="about-sc" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="about-sc-modal-label" style="color: #a3141b">About Swarthmore Connection</h4>
+	      </div>
+	      <div class="modal-body" id="about-sc-body">
+	      	<p><span style="color: #a3141b;"><b>Swarthmore Connection</b></span> lets you keep track of where your fellow Swatties are working at or traveling to during the summer or after graduation.</p>
+	      	<h4>Why Swarthmore Connection?</h4>
+	      	<p><span class="glyphicon glyphicon-home" style="color: #a3141b;"></span>&nbsp;&nbsp;Looking for roommates over the summer?</p>
+	      	<p><span class="glyphicon glyphicon-glass" style="color: #a3141b;"></span>&nbsp;&nbsp;Missing Swatties and wanting to hanging out?</p>
+	      	<p><span class="glyphicon glyphicon-lock" style="color: #a3141b;"></span>&nbsp;&nbsp;Networking and learning from others' experiences?</p>
+	      	<h4>What Can I Do On Swarthmore Connection?</h4>
+	      	<p><span class="glyphicon glyphicon-phone" style="color: #a3141b;"></span>&nbsp;&nbsp;Share your summer plans and creating custom markers on the map</p>
+	      	<p><span class="glyphicon glyphicon-zoom-in" style="color: #a3141b;"></span>&nbsp;&nbsp;Find out who's gonna be in your area over the summer with one button click</p>
+	      	<p><span class="glyphicon glyphicon-user" style="color: #a3141b;"></span>&nbsp;&nbsp;Find out where your friends are gonna be with one button click</p>
+	      	<p><span class="glyphicon glyphicon-thumbs-up" style="color: #a3141b;"></span>&nbsp;&nbsp;Like others' summer plans by giving them your thumb-up's</p>
+	      	<p>There are many more other reasons to stay in touch with our classmates and alumni. Some of them can refer us to recruiters when we're looking for jobs. Some can share with us insider tips to foreign countries. In a word, connecting with Swatties is important.</p>
+	      	<h4>Who Build This Awesome App?</h4>
+	      	<!--
+				  <a class="summer-plan col-md-12 col-sm-12 col-xs-12" href="https://www.facebook.com/profile.php?id=1398690719" target="_blank">
+				  -->
+				  <a class="summer-plan col-md-12 col-sm-12 col-xs-12" href="/#user/DtDMVYL1Q7">
+						<div class="div-plan-img col-md-2 col-sm-2 col-xs-4">
+							<div class="div-about-img-frame">
+								<img class="about-img" alt="Responsive image" src="https://fbcdn-profile-a.akamaihd.net/hprofile-ak-ash2/t1.0-1/s160x160/1510973_2732038145668_594161763_a.jpg">
+							</div>
+						</div>
+						<div class="div-plan-name col-md-10 col-sm-10 col-xs-8" style="font-weight: bold;">
+							Jack Yang&#44;&nbsp;Class of 2014
+						</div>
+					</a>
+					<a class="summer-plan col-md-12 col-sm-12 col-xs-12" href="https://www.facebook.com/profile.php?id=1115080416" target="_blank">
+						<div class="div-plan-img col-md-2 col-sm-2 col-xs-4">
+							<div class="div-about-img-frame">
+								<img class="about-img" alt="Responsive image" src="https://fbcdn-profile-a.akamaihd.net/hprofile-ak-frc3/t1.0-1/s160x160/969761_4961688236073_1173018403_a.jpg">
+							</div>
+						</div>
+						<div class="div-plan-name col-md-10 col-sm-10 col-xs-8" style="font-weight: bold;">
+							Orhan Hirsch
+						</div>
+					</a>
+					<h4>Other Contributors</h4>
+					<a href="/#user/pkyH4o5ASU">Nimesh Ghimire '15</a>
+					<span>&nbsp;</span>
+					<a href="/#user/dEyybVBP1f">Peng Zhao '15</a>
+					<p>If you have questions or want to report bugs, please contact me at yyang4(at)swarthmore.edu</p>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+  <!-- Welcome Modal -->
+	<div class="modal fade" id="welcome-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	  <div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" style="color: #a3141b;">Welcome to Swarthmore Connection</h4>
+	      </div>
+	      <div class="modal-body" id="welcome-modal-body">
+	      	<p><span style="color: #a3141b;"><b>Swarthmore Connection</b></span> lets you keep track of where your fellow Swatties are working at or traveling to during the summer or after graduation.</p>
+	      	<h4>Why Swarthmore Connection?</h4>
+	      	<p><span class="glyphicon glyphicon-home" style="color: #a3141b;"></span>&nbsp;&nbsp;Looking for roommates over the summer?</p>
+	      	<p><span class="glyphicon glyphicon-glass" style="color: #a3141b;"></span>&nbsp;&nbsp;Missing Swatties and wanting to hanging out?</p>
+	      	<p><span class="glyphicon glyphicon-lock" style="color: #a3141b;"></span>&nbsp;&nbsp;Networking and learning from others' experiences?</p>
+	      	<h4>What Can I Do On Swarthmore Connection?</h4>
+	      	<p><span class="glyphicon glyphicon-phone" style="color: #a3141b;"></span>&nbsp;&nbsp;Share your summer plans and creating custom markers on the map</p>
+	      	<p><span class="glyphicon glyphicon-zoom-in" style="color: #a3141b;"></span>&nbsp;&nbsp;Find out who's gonna be in your area over the summer with one button click</p>
+	      	<p><span class="glyphicon glyphicon-user" style="color: #a3141b;"></span>&nbsp;&nbsp;Find out where your friends are gonna be with one button click</p>
+	      	<p><span class="glyphicon glyphicon-thumbs-up" style="color: #a3141b;"></span>&nbsp;&nbsp;Like others' summer plans by giving them your thumb-up's</p>
+	      	<p>There are many more other reasons to stay in touch with our classmates and alumni. Some of them can refer us to recruiters when we're looking for jobs. Some can share with us insider tips to foreign countries. In a word, connecting with Swatties is important.</p>
+	      	<button type="button" class="btn btn-primary" id="welcome-btn" data-dismiss="modal">Let's get started!</button>
+	      </div>
+	    </div>
+	  </div>
+	</div>
+
+  <!-- Share Your Plan Modal -->
+	<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	</div>
+
+  <!-- Like List Modal :: display a list of people who liked my plan -->
+	<div class="modal fade" id="likelist" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	</div>
+
+	<!-- Templates -->
+
+
+	<!-- Modal Loading Template -->
+	<script type="text/template" id="modal-loading-template">
+		<div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-body" id="share-body">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+      		<div class="spinner">
+				<div class="rect1"></div>
+				<div class="rect2"></div>
+				<div class="rect3"></div>
+				<div class="rect4"></div>
+				<div class="rect5"></div>
+			</div>
+	      </div>
+	    </div>
+	  </div>
+	</script>
+
+	<!-- Login Template -->
+	<script type="text/template" id="login-template">
+		<div class="modal-dialog">
+		    <div class="modal-content">
+		      <div class="modal-header">
+		        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		        <h4 class="modal-title" id="login-modal-label">Please log in first</h4>
+		      </div>
+		      <div class="modal-body" id="share-body">
+		      	<div class="content">
+		      		<h5>In order to protect the privacy of Swarthmore students, please let us verify your Swattiness first.</h5>
+	      		<div>
+	  					<button type="button" class="btn btn-primary" data-loading-text="Loading..." id="login">Verify with Facebook</button>
+	  				<div>
+	      	</div>
+	      </div>
+	    </div>
+	  </div>
+	</script>
+
+	<!-- Nav_bar Menu Template -->
+	<script type="text/template" id="nav-bar-menu-template">
+	<% if(user){ %>
+		<div id="my-account-btn-img-div">
+			<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+				<img id="my-account-btn-img" class="img-rounded" alt="Responsive image" src="<%= user.get("imgURL") %>">
+			</a>
+			<ul class="dropdown-menu">
+				<li><a href="#myProfile" id="myProfile-link">My Profile</a></li>
+				<li><a href="#myPlans" id="myPlans-link">My Plans</a></li>
+				<li class="divider"></li>
+	      <li><a href="#logout" style="color: #a3141b" id="logout-link">Log Out</a></li>
+	    </ul>
+		</div>
+	<% } %>
+	</script>
+
+	<!-- My Profile Template -->
+	<script type="text/template" id="my-profile-template">
+		<div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="my-profile-label"><%= title %></h4>
+	      </div>
+	      <div class="modal-body" id="my-profile-body">
+	      	<div class="content">
+	      		<img id="profileImg" alt="Responsive image" class="img-thumbnail" height="100" width="100" src="<%= user.get("imgURL") %>">
+				    <h4 id="name">name: <%= user.get("firstName") %> <%= user.get("lastName") %></h4>
+				    <h4 id="email">email: <%= user.get("email") %></h4>
+				    <form role="form" class="update-class-year-form">
+				    <div class="form-group">
+					    <h4 for="class-year">class year:</h4>
+					    <input type="text" class="form-control" id="inputClassYear" placeholder="Enter class year, e.g. 2017" value="<%= user.get("classYear") ? user.get("classYear") : '' %>">
+						</div>
+						<button type="submit" id="update-class-year-btn" class="btn btn-success" data-loading-text="Saving changes...">Update Class Year</button>
+				    </form>
+	      	</div>
+	      </div>
+	    </div>
+	  </div>
+	</script>
+
+	<!-- Like List Template -->
+	<script type="text/template" id="like-list-template">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+		    		<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+		   			<h4 class="modal-title" id="find-neighbors-modal-label">People Who Like This</h4>
+				</div>
+		  		<div class="modal-body" id="find-neighbors-body">
+		  			<div class="plan-list row">
+
+						<% _.each(likes,function(like){ %>
+						<div class="summer-plan col-md-12 col-sm-12 col-xs-12">
+							<div class="div-plan-img col-md-3 col-sm-3 col-xs-6">
+								<div class="div-plan-img-frame">
+									<a class="userpage" href="#user/<%= like.get("user").id %>">
+										<img class="plan-img" alt="Responsive image" src="<%= like.get("user").get("imgURL") %>">
+									</a>
+								</div>
+							</div>
+							<div class="col-md-9 col-sm-9 col-xs-6">
+								<div class="div-plan-name col-md-12 col-sm-12 col-xs-12" style="font-weight: bold;">
+									<a class="userpage" href="#user/<%= like.get("user").id %>">
+										<%= like.get("user").get("firstName") %>
+										<%= like.get("user").get("lastName") %>
+									</a>
+								</div>
+								<% if (like.get("user").get("classYear")) { %>
+								<div class="col-md-12 col-sm-12 col-xs-12" style="font-weight: bold;">
+									Class of <%= like.get("user").get("classYear") %>
+								</div>
+								<% } %>
+							</div>
+						</div>
+						<% }); %>
+					</div>
+		 		</div>
+			</div>
+		</div>
+	</script>
+
+	<!-- Profile View Template -->
+	<script type="text/template" id="edit-profile-template">
+		<div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="myModalLabel"><%= title %></h4>
+	      </div>
+	      <div class="modal-body" id="share-body">
+	      	<div class="content">
+			    <img id="profileImg" alt="Responsive image" class="img-thumbnail" height="100" width="100" src="<%= user.get("imgURL") %>">
+			    <form role="form" class="edit-user-form">
+			     <div class="form-group">
+			     	<label for="inputFirstName">First name</label>
+			     	<input type="text" class="form-control" id="inputFirstName" placeholder="First name" value="<%= user.get('firstName') ? user.get('firstName') : '' %>">
+			     </div>
+				<div class="form-group">
+			     	<label for="inputLastName">Surname</label>
+			     	<input type="text" class="form-control" id="inputLastName" placeholder="First name" value="<%= user.get('lastName') ? user.get('lastName') : '' %>">
+			     </div>
+			     <div class="form-group">
+			     	<label for="inputLastName">Email</label>
+			     	<input type="text" class="form-control" id="inputEmail" placeholder="Email" value="<%= user.get('email') ? user.get('email') : '' %>">
+			     </div>
+		    	  <div class="form-group">
+				    <label for="inputClass">Class year</label>
+				    <input type="text" class="form-control" id="inputClassYear" placeholder="Enter class year, e.g. 2017" value="<%= user.get('classYear') ? user.get('classYear') : '' %>">
+				  </div>
+				  <div class="form-group">
+				    <label for="inputLocation">Home</label>
+				    <p style="font-style: italic;">To ensure that your location correctly shows on the map, please choose from the autocomplete dropdown list</p>
+				    <input type="text" class="form-control" id="inputLocation" placeholder="Enter location" value="<%= user.get("home") ? user.get("home").get("location") : '' %>" >
+				    <input type="hidden" id="inputID" value="<%= user.id %>">
+				  </div>
+				  <div id="plan-error" style="display:none; color: red;"></div>
+				  <button type="submit" id="plan-submit-btn" class="btn btn-success" data-loading-text="Submitting">Submit data</button>
+				</form>  	
+	      	</div>
+	      </div>
+	    </div>
+		</div>
+	</script>
+
+	<!-- Share Plan Template -->
+	<script type="text/template" id="share-plan-template">
+		<div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="myModalLabel"><%= plan.id ? 'Edit your plan':'Share your summer plans!' %></h4>
+	      </div>
+	      <div class="modal-body" id="share-body">
+	      	<div class="content">
+				    <img id="profileImg" alt="Responsive image" class="img-thumbnail" height="100" width="100" src="<%= user.get("imgURL") %>">
+				    <h4 id="name"><%= user.get("firstName") %> <%= user.get("lastName") %>
+				    <% if (user.get("classYear")) { %>
+				    	&#44;&nbsp;Class of <%= user.get("classYear") %>
+				    <% } %>
+				    </h4>
+				    <form role="form" class="share-plan-form">
+						<% var types={work:"",travel:"",home:""};if(plan.id){types[plan.get("type")] = "selected"} %>
+						  <div class="form-group">
+						    <label for="inputType">Category</label>
+						    <select id="inputType" class="form-control">
+						    	<option value="work" <%= types.work %>>Work</option>
+						    	<option value="travel" <%= types.travel %>>Travel</option>
+						    	<option value="home" <%= types.home %>>Home</option>
+						    </select>
+						  </div>
+						  <div class="form-group type-work">
+						    <label for="inputOrg">Organization.</label>
+						    <input type="text" class="form-control" id="inputOrg" placeholder="Enter organization, e.g. Teach for America" value="<%= plan.id ? plan.get('org') : '' %>">
+						  </div>
+						  <div class="form-group type-work">
+						    <label for="inputTitle">Position title.</label>
+						    <input type="text" class="form-control" id="inputTitle" placeholder="Enter position title, e.g. Volunteer" value="<%= plan.id ? plan.get('position') : '' %>">
+						  </div>
+						  <div class="form-group">
+						    <label for="inputLocation">Location</label>
+						    <p style="font-style: italic;">To ensure that your location correctly shows on the map, please choose from the autocomplete dropdown list</p>
+						    <input type="text" class="form-control" id="inputLocation" placeholder="Enter location" value="<%= plan.get && plan.get("markerParent") ? plan.get("markerParent").get("location") : '' %>" >
+						    <% if(plan.id){ %>
+						    <input type="hidden" id="inputID" value="<%= plan.id %>">
+						    <% } %>
+						  </div>
+						  <div class="form-group">
+						    <label for="inputStart">Start date <i>(optional)</i></label>
+						    <input type="text" class="form-control" id="inputStart" placeholder="Select start date" value="<%= plan.id ? format_date_for_picker(plan.get('startDate')) : '' %>">
+						  </div>
+						  <div class="form-group">
+						    <label for="inputEnd">End date <i>(optional)</i></label>
+						    <input type="text" class="form-control" id="inputEnd" placeholder="Select end date" value="<%= plan.id ? format_date_for_picker(plan.get('endDate')) : '' %>">
+						  </div>
+						  <div id="plan-error" style="display:none; color: red;"></div>
+						  <button type="submit" id="plan-submit-btn" class="btn btn-success" data-loading-text="Submitting">Submit plan</button>
+						</form>  	
+		      </div>
+	      </div>
+	    </div>
+		</div>	
+	</script>
+
+	<!-- Choose Location Template -->
+	<script type="text/template" id="choose-location-template">
+		<a class="location col-md-12 col-sm-12 col-xs-12" href="/#findNearby/<%= marker.id %>">
+			<div><span class="glyphicon glyphicon-pushpin"></span>&nbsp;&nbsp;<%= marker.get("location") %></div>
+		</a>
+	</script>
+
+	<!-- Summer Plan Template -->
+	<script type="text/template" id="plan-template">
+		<div class="summer-plan col-md-12 col-sm-12 col-xs-12">
+			<div class="div-plan-img col-md-2 col-sm-2 col-xs-4">
+				<div class="div-plan-img-frame">
+					<a href="#user/<%= plan.get("parent").id %>">
+						<img class="plan-img" alt="Responsive image" src="<%= plan.get("parent").get("imgURL") %>">
+					</a>
+				</div>
+			</div>
+			<div class="col-md-7 col-sm-7 col-xs-5">
+				<div class="div-plan-name col-md-12 col-sm-12 col-xs-12" style="font-weight: bold;">
+					<a href="#user/<%= plan.get("parent").id %>">
+						<%= plan.get("parent").get("firstName") %> <%= plan.get("parent").get("lastName") %>
+					</a>
+					&#44;&nbsp;Class of <%= plan.get("parent").get("classYear") %>
+				</div>
+				<div class="div-plan-position col-md-12 col-sm-12 col-xs-12">
+					<%= plan.get("position") %>
+				</div>
+				<div class="div-plan-org col-md-12 col-sm-12 col-xs-12">
+					<%= plan.get("org") %>
+				</div>
+				<div class="div-plan-org col-md-12 col-sm-12 col-xs12">
+					<a href="#location/<%= plan.get("markerParent").id %>"><%= plan.get("markerParent").get("location") %></a>
+				</div>
+				<div class="div-plan-org col-md-12 col-sm-12 col-xs12">
+					Plan type: <%= plan.get("type") || "No type selected" %>
+				</div>
+				<div class="div-plan-org col-md-12 col-sm-12 col-xs12">
+					From: <%= format_date(plan.get("startDate")) || "No start date selected" %>
+				</div>
+				<div class="div-plan-org col-md-12 col-sm-12 col-xs12">
+					To: <%= format_date(plan.get("endDate")) || "No end date selected" %>
+				</div>
+			</div>
+			<div class="like-plan-div col-md-3 col-sm-3 col-xs-3">
+				<div class="col-md-12 col-sm-12 col-xs-12">
+					<% if(liked){ %>
+						<button type="button" class="like-plan btn btn-default btn-sm disabled">
+						<span style="color: #3b5998; font-weight: bold;">Liked</span>
+					<% }else{ %>
+						<button type="button" class="like-plan btn btn-default btn-sm" data-loading-text="...">
+						<span class="like-plan-glyphicon glyphicon glyphicon-thumbs-up"></span>
+					<% } %>
+					</button>
+					<span>&nbsp;</span>
+					<% if(likes > 0){ %>
+						<a style="color:#3b5998; cursor: pointer;" class="likes"><%= likes %></a>
+					<% }else{ %>
+						<span style="color:#3b5998;"><%= likes %></span>
+					<% } %>
+				</div>
+				<% if(edit) { %>
+				<div class="col-md-12 col-sm-12 col-xs-12" style="margin: 5px auto auto auto;">
+						<a href="#plan/<%= plan.id %>" style="color: #a3141b; cursor: pointer;">edit</a>
+				</div>
+				<% } %>
+			</div>
+		</div>
+	</script>
+
+	<!-- Summer Plan List Template -->
+	<script type="text/template" id="plan-list-template">
+		<div class="modal-dialog">
+	    <div class="modal-content">
+	      <div class="modal-header">
+	        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+	        <h4 class="modal-title" id="find-neighbors-modal-label"><%= title %></h4>
+	      </div>
+	      <div class="modal-body" id="find-neighbors-body">
+	      	<div class="plan-list row">
+	      	</div>
+	      	<% if(id){ %>
+	      		<a href="#new/<%= id %>" class="btn btn-default new-plan">Share my plan at this location</a>
+	      	<% } %>
+	      	
+	      	<% if(profilePage){ %>
+	      		<a href="https://www.facebook.com/profile.php?id=<%= profilePage %>" class="btn btn-default go-to-fb" target="_blank">Go to her/his Facebook profile</a>
+	      	<% } %>
+	      </div>
+	    </div>
+	  </div>
+	</script>
+
+	<!-- App Code -->
+
+  <script src="js/app.js"></script>
+  
+
+</body>
 </html>
