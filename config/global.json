@@ -1,0 +1,21 @@
+{
+    "applications": {
+        "Hacknection": {
+            "applicationId": "EKsq0ZyvohYoGkzNpxSrMEuIlsSoyeNuLL2R4y2d", 
+            "masterKey": "oO7tRE6VFed6MG7HVZSm6ZeDJiqjgO8MWmZOulQi"
+        }, 
+        "Hacknection_Dev": {
+            "applicationId": "Z8MDn4SGuskCvuYj7JEdDYGHC9gaKGwtQXFH6tBo", 
+            "masterKey": "RUXlw2FSQE5XbgrqFNDYObSpaOZHgOFIAWQApCBf"
+        }, 
+        "_default": {
+            "link": "Hacknection_Dev"
+        }, 
+        "production": {
+            "link": "Hacknection"
+        }
+    }, 
+    "global": {
+        "parseVersion": "1.2.18"
+    }
+}
